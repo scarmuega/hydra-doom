@@ -43,6 +43,8 @@ module.exports = {
     new CopyWebpackPlugin({
       patterns: [
         { from: "assets/doom1.wad" },
+        { from: "assets/freedoom2.wad" },
+        { from: "assets/Cardano.wad" },
         { from: "assets/default.cfg" },
         { from: "assets/websockets-doom.js" },
         { from: "assets/websockets-doom.wasm" },

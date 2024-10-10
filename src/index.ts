@@ -101,7 +101,9 @@ tabButtons.forEach((button) => {
 
 const commonArgs = [
   "-iwad",
-  "doom1.wad",
+  "freedoom2.wad",
+  "-file",
+  "Cardano.wad",
   "-window",
   "-nogui",
   "-nomusic",
