@@ -49,7 +49,7 @@ const pkh = lucid.utils.getAddressDetails(address).paymentCredential?.hash!;
 console.log(`Using session key with address: ${address}`);
 
 // Continue or fetch a game session
-let hydra: Hydra | undefined = undefined;
+let hydra: Hydra = undefined as any;
 let player_pkh: string;
 let node = window.localStorage.getItem("hydra-doom-session-node");
 let scriptRef = window.localStorage.getItem("hydra-doom-session-ref");
@@ -66,84 +66,85 @@ let sessionStats = {
 };
 
 export async function fetchNewGame(region: string) {
-  if (!gameServerUrl) {
-    throw new Error("No game server URL configured");
-  }
-  try {
-    console.log(`Starting new game for ${address}`);
-    const response = await fetch(
-      `${gameServerUrl}/new_game?address=${address}&region=${process.env.REGION ?? region}&reserved=${!!process.env.CABINET_KEY}`,
-    );
-    const newGameResponse = await response.json();
-    console.log(`New game successful with UTxO ${newGameResponse.player_utxo}`);
-    node = newGameResponse.ip as string;
-    player_pkh = newGameResponse.admin_pkh as string;
-    scriptRef = newGameResponse.script_ref as string;
-    window.localStorage.setItem("hydra-doom-session-node", node);
-    window.localStorage.setItem("hydra-doom-session-ref", scriptRef);
-    sessionStats = {
-      transactions: 0,
-      bytes: 0,
-      total_kills: 0,
-      total_items: 0,
-      total_secrets: 0,
-      total_play_time: 0,
-    };
-    // TODO: protocol from host
-    const protocol = gameServerUrl.startsWith("https") ? "https" : "http";
+  return;
+  // if (!gameServerUrl) {
+  //   throw new Error("No game server URL configured");
+  // }
+  // try {
+  //   console.log(`Starting new game for ${address}`);
+  //   const response = await fetch(
+  //     `${gameServerUrl}/new_game?address=${address}&region=${process.env.REGION ?? region}&reserved=${!!process.env.CABINET_KEY}`,
+  //   );
+  //   const newGameResponse = await response.json();
+  //   console.log(`New game successful with UTxO ${newGameResponse.player_utxo}`);
+  //   node = newGameResponse.ip as string;
+  //   player_pkh = newGameResponse.admin_pkh as string;
+  //   scriptRef = newGameResponse.script_ref as string;
+  //   window.localStorage.setItem("hydra-doom-session-node", node);
+  //   window.localStorage.setItem("hydra-doom-session-ref", scriptRef);
+  //   sessionStats = {
+  //     transactions: 0,
+  //     bytes: 0,
+  //     total_kills: 0,
+  //     total_items: 0,
+  //     total_secrets: 0,
+  //     total_play_time: 0,
+  //   };
+  //   // TODO: protocol from host
+  //   const protocol = gameServerUrl.startsWith("https") ? "https" : "http";
 
-    hydra = new Hydra(`${protocol}://${node}`, 100);
-    await hydra.populateUTxO();
-    hydra.onTxSeen = (_txId, tx) => {
-      const redeemer: Uint8Array | undefined = tx.txComplete
-        .witness_set()
-        .redeemers()
-        ?.get(0)
-        ?.data()
-        .to_bytes();
-      if (!redeemer) {
-        return;
-      }
-      const cmds = decodeRedeemer(toHex(redeemer));
-      cmds.forEach((cmd) => {
-        false && cmdQueue.push(cmd);
-        // append some representation of the tx into the UI
-        appendTx(cmd);
-        if (cmdQueue.length > 1000) {
-          console.warn("Command queue grew big, purging 100 entries");
-          cmdQueue = cmdQueue.slice(-100);
-        }
-      });
-    };
-    hydra.onTxConfirmed = (txId) => {
-      // XXX: TPS only computed when tx confirmed -> does not go to 0 after some time
-      const now = performance.now();
-      let tps = 0;
-      for (const txid in hydra!.tx_timings) {
-        const timing = hydra!.tx_timings[txid]!;
-        if (timing.confirmed && timing.sent + timing.confirmed > now - 1000) {
-          tps++;
-        }
-      }
-      setLocalSpeedometerValue(tps);
-    };
-    hydra.onTxInvalid = (txId) => {
-      console.error("invalid", txId);
-      setLocalSpeedometerValue(0);
-      stop = true;
-    };
-    latestUTxO = await hydra.awaitUtxo(newGameResponse.player_utxo, 5000);
-    // HACK: until hydra returns the datum bytes, all the datum bytes will be wrong
-    // so we return it from the newGameResponse and set it manually here
-    latestUTxO.datum = newGameResponse.player_utxo_datum_hex;
+  //   hydra = new Hydra(`${protocol}://${node}`, 100);
+  //   await hydra.populateUTxO();
+  //   hydra.onTxSeen = (_txId, tx) => {
+  //     const redeemer: Uint8Array | undefined = tx.txComplete
+  //       .witness_set()
+  //       .redeemers()
+  //       ?.get(0)
+  //       ?.data()
+  //       .to_bytes();
+  //     if (!redeemer) {
+  //       return;
+  //     }
+  //     const cmds = decodeRedeemer(toHex(redeemer));
+  //     cmds.forEach((cmd) => {
+  //       false && cmdQueue.push(cmd);
+  //       // append some representation of the tx into the UI
+  //       appendTx(cmd);
+  //       if (cmdQueue.length > 1000) {
+  //         console.warn("Command queue grew big, purging 100 entries");
+  //         cmdQueue = cmdQueue.slice(-100);
+  //       }
+  //     });
+  //   };
+  //   hydra.onTxConfirmed = (txId) => {
+  //     // XXX: TPS only computed when tx confirmed -> does not go to 0 after some time
+  //     const now = performance.now();
+  //     let tps = 0;
+  //     for (const txid in hydra!.tx_timings) {
+  //       const timing = hydra!.tx_timings[txid]!;
+  //       if (timing.confirmed && timing.sent + timing.confirmed > now - 1000) {
+  //         tps++;
+  //       }
+  //     }
+  //     setLocalSpeedometerValue(tps);
+  //   };
+  //   hydra.onTxInvalid = (txId) => {
+  //     console.error("invalid", txId);
+  //     setLocalSpeedometerValue(0);
+  //     stop = true;
+  //   };
+  //   latestUTxO = await hydra.awaitUtxo(newGameResponse.player_utxo, 5000);
+  //   // HACK: until hydra returns the datum bytes, all the datum bytes will be wrong
+  //   // so we return it from the newGameResponse and set it manually here
+  //   // latestUTxO.datum = newGameResponse.player_utxo_datum_hex;
 
-    // This is temporary, the initial game state is stored in a UTxO created by the control plane.
-    // We need to add the ability to parse game state from the datum here.
-    gameData = initialGameData(pkh, player_pkh!);
-  } catch (e) {
-    console.error("Error: ", e);
-    throw e;
-  }
+  //   // This is temporary, the initial game state is stored in a UTxO created by the control plane.
+  //   // We need to add the ability to parse game state from the datum here.
+  //   gameData = initialGameData(pkh, player_pkh!);
+  // } catch (e) {
+  //   console.error("Error: ", e);
+  //   throw e;
+  // }
 }
 
 const scriptAddress = lucid.utils.validatorToAddress({
@@ -192,6 +193,7 @@ export async function hydraSend(
   leveltime: number,
   level: LevelId,
 ) {
+  return;
   if (stop) throw new Error("stop");
 
   if (!gameData || !hydra) throw new Error("Game data not initialized");
@@ -227,13 +229,13 @@ export async function hydraSend(
         continue;
       }
       const data = decodeDatum(utxo.datum);
-      if (!!data) {
+      /*if (!!data) {
         runningGames.push(data.owner);
         if (data.owner == pkh) {
           latestUTxO = utxo;
           break;
         }
-      }
+      }*/
     }
     if (!latestUTxO) {
       console.warn(
