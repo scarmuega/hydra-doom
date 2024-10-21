@@ -1,4 +1,4 @@
-import { fetchNewGame, hydraRecv, hydraSend } from "./game";
+import { requestNewGame, requestJoinGame, hydraSetIP, hydraSendPacket } from "./game";
 import { generatePooQrUri, keys } from "./keys";
 import "./osano.js";
 import { startQueryingAPI, truncateString } from "./stats";
@@ -25,6 +25,8 @@ const continentForm: HTMLFormElement | null =
   document.querySelector("#continent-form");
 const startGameButton: HTMLButtonElement | null =
   document.querySelector("#start-game-button");
+const joinGameButton: HTMLButtonElement | null =
+  document.querySelector("#join");
 const tabButtons = document.querySelectorAll(".js-tab-button");
 const sessionPkhDisplay: HTMLElement | null = document.querySelector(
   "#session-pkh-display"
@@ -54,8 +56,8 @@ async function pollForPoo(ephemeralKeyHash: string) {
   pollingInterval = setTimeout(() => pollForPoo(ephemeralKeyHash), 5000);
 }
 // Glue together callbacks available from doom-wasm
-(window as any).hydraSend = hydraSend;
-(window as any).hydraRecv = hydraRecv;
+(window as any).hydraSetIP = hydraSetIP;
+(window as any).hydraSendPacket = hydraSendPacket;
 
 if (process.env.CABINET_KEY) {
   document.querySelectorAll(".js-cabinet-logos").forEach((element) => {
@@ -186,6 +188,10 @@ startGameButton?.addEventListener("click", async () => {
   !!qrCode && !qrShown ? await showQrCode() : await startGame();
 });
 
+joinGameButton?.addEventListener("click", async () => {
+  await joinGame();
+});
+
 // Skip QR code
 skipButton?.addEventListener("click", () => {
   clearInterval(pollingInterval);
@@ -221,7 +227,7 @@ async function startGame() {
   }
 
   try {
-    await fetchNewGame(selectedContinent);
+    await requestNewGame(selectedContinent);
 
     if (loadingMessage) loadingMessage.style.display = "none";
 
@@ -240,7 +246,43 @@ async function startGame() {
     if (message) message.style.display = "flex";
   }
   // hydra-recv is temporarily disabled so we can move around
-  callMain(commonArgs.concat(["-hydra-send" /* "-hydra-recv" */]));
+  callMain(commonArgs.concat(["-server", "-pet", "Pi" /* "-hydra-send", "-hydra-recv" */]));
+}
+
+async function joinGame() {
+  if (startButton) {
+    startButton.style.display = "none";
+  }
+
+  if (qrCodeWrapper) {
+    qrCodeWrapper.style.display = "none";
+  }
+
+  if (loadingMessage) {
+    loadingMessage.style.display = "flex";
+  }
+
+  try {
+    await requestJoinGame("");
+
+    if (loadingMessage) loadingMessage.style.display = "none";
+
+    if (canvas) {
+      canvas.style.width = "100%";
+      canvas.style.height = "100%";
+      canvas.style.position = "static";
+    }
+
+    // Shuffle and play music files
+    shuffleArray(musicFiles);
+    playMusic(musicFiles);
+  } catch (error) {
+    console.error(error);
+    if (loadingMessage) loadingMessage.style.display = "none";
+    if (message) message.style.display = "flex";
+  }
+  // hydra-recv is temporarily disabled so we can move around
+  callMain(commonArgs.concat(["-connect", "1", "-pet", "Josh" /* "-hydra-send", "-hydra-recv" */]));
 }
 
 // Watch game

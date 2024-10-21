@@ -90,6 +90,13 @@
           >
             <span>Play Doom On Hydra</span>
           </button>
+          <button
+            id="join"
+            class="play-doom-button"
+            data-modal-target="modal-game"
+          >
+            <span>Join Doom On Hydra</span>
+          </button>
         </div>
         <div class="js-hide-when-modal-opens">
           <div class="landing-tables">
@@ -1018,7 +1025,7 @@
           return canvas;
         })(),
         print: (text) => {
-          console.log("stdout", text);
+          console.log("stdout:", text);
         },
         setStatus: (text) => {
           console.log("setStatus", text);
